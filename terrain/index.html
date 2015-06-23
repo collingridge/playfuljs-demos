@@ -7,10 +7,11 @@
     <canvas id='display' width='1' height='1' />
 
     <script>
-
+      var maxsize
       function Terrain(detail) {
         this.size = Math.pow(2, detail) + 1;
-        this.max = this.size - 1;
+        this.max = this.size -1;
+        graphline = this.max/2;
         this.map = new Float32Array(this.size * this.size);
       }
 
@@ -26,7 +27,12 @@
       Terrain.prototype.generate = function(roughness) {
         var self = this;
 
-        this.set(0, 0, self.max);
+        for (i = 0; i < this.max; i++) { 
+              this.set(i, graphline, 100 + Math.sin(i) * 100);
+              this.set(i, graphline-1, 100 + Math.sin(i) * 100);
+            }
+
+        this.set(0, 0, self.max / 2);
         this.set(this.max, 0, self.max / 2);
         this.set(this.max, this.max, 0);
         this.set(0, this.max, self.max / 2);
@@ -57,24 +63,45 @@
           return total / valid.length;
         }
 
+        function preserve(value, test, replace) {
+          //console.log("the value: ".concat(value));
+          //console.log("the test: ".concat(test));
+          //console.log("the replace: ".concat(replace));
+          if (value == test) {
+            value = replace
+          }
+          //console.log("value: " || value);
+          return value
+        }
+
         function square(x, y, size, offset) {
+          var yy
           var ave = average([
             self.get(x - size, y - size),   // upper left
             self.get(x + size, y - size),   // upper right
             self.get(x + size, y + size),   // lower right
             self.get(x - size, y + size)    // lower left
           ]);
-          self.set(x, y, ave + offset);
+
+          yy = preserve(y, graphline, graphline -1)
+
+          //console.log("y: " || yy);
+          //if (self.get(x, y) === null) {
+            self.set(x, yy, ave + offset);
+          //}
+
         }
 
         function diamond(x, y, size, offset) {
+          var yy
           var ave = average([
             self.get(x, y - size),      // top
             self.get(x + size, y),      // right
             self.get(x, y + size),      // bottom
             self.get(x - size, y)       // left
           ]);
-          self.set(x, y, ave + offset);
+          yy = preserve(y, graphline, graphline -1)
+          self.set(x, yy, ave + offset);
         }
       };
 
@@ -118,7 +145,7 @@
           var point = iso(flatX, flatY);
           var x0 = width * 0.5;
           var y0 = height * 0.2;
-          var z = self.size * 0.5 - flatZ + point.y * 0.75;
+          var z = self.size * 0.5 - flatZ + point.y * 0.5;
           var x = (point.x - self.size * 0.5) * 6;
           var y = (self.size - point.y) * 0.005 + 1;
 
@@ -134,7 +161,7 @@
       var width = display.width = window.innerWidth;
       var height = display.height = window.innerHeight;
 
-      var terrain = new Terrain(9);
+      var terrain = new Terrain(8);
       terrain.generate(0.7);
       terrain.draw(ctx, width, height);
 
